@@ -6,10 +6,32 @@
     android:layout_height="match_parent"
     tools:context="pub.wc.MainActivity">
 
-    <com.amap.api.maps2d.MapView
-        android:id="@+id/map"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+        <com.amap.api.maps2d.MapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
+        <ImageButton
+            android:id="@+id/ibtn_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@mipmap/ic_location"/>
+        <ImageButton
+            android:id="@+id/ibtn_add_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@mipmap/ic_location"/>
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>
