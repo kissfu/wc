@@ -26,7 +26,9 @@ import com.amap.api.maps2d.model.LatLng;
 import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.VisibleRegion;
+import com.amap.api.services.core.LatLonPoint;
 
+import pub.beans.PositionInfo;
 import pub.utils.SensorEventHelper;
 import pub.utils.ToastUtil;
 
@@ -39,7 +41,6 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     private LocationSource.OnLocationChangedListener mListener;
     private AMapLocationClient mlocationClient;
     private AMapLocationClientOption mLocationOption;
-    private LatLng currentPosition;
     private AMapLocation currentAMapLocation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,20 +178,20 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     private Circle mCircle;
     private void addSensorMaker(AMapLocation amapLocation){
         currentAMapLocation = amapLocation;
-        currentPosition = new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude());
+        LatLng latLng = new LatLng(amapLocation.getLatitude(), amapLocation.getLongitude());
         if (!mFirstFix) {
             mFirstFix = true;
-            addCircle(currentPosition, amapLocation.getAccuracy());//添加定位精度圆
-            addMarker(currentPosition);//添加定位图标
+            addCircle(latLng, amapLocation.getAccuracy());//添加定位精度圆
+            addMarker(latLng);//添加定位图标
             mSensorHelper.setCurrentMarker(mLocMarker);//定位图标旋转
             //这只放大缩小的级别
             //mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
             //aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
-            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 18));
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
         } else {
-            mCircle.setCenter(currentPosition);
+            mCircle.setCenter(latLng);
             mCircle.setRadius(amapLocation.getAccuracy());
-            mLocMarker.setPosition(currentPosition);
+            mLocMarker.setPosition(latLng);
         }
     }
     private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
@@ -254,15 +255,19 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     @Override
     public void onClick(View v) {
         if (v == ibtnLocation) {
-            if(currentPosition != null){
+            if(currentAMapLocation != null){
                 //回到当前位置
-                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 18));
+                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()), 18));
             }
         }else if(v == ibtnAddLocation){
             Intent intent = new Intent();
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("amap", currentAMapLocation); //实现Parcelable接口的对象
-            intent.putExtras(bundle);
+            PositionInfo positionInfo = new PositionInfo();
+            positionInfo.setCityCode(currentAMapLocation.getCityCode());
+            positionInfo.setLatLonPoint(new LatLonPoint(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()));
+            positionInfo.setAddress(currentAMapLocation.getAddress());
+            positionInfo.setAddressJoin(currentAMapLocation.getProvince() + "-" + currentAMapLocation.getCity() + "-" + currentAMapLocation.getDistrict() + "-" + currentAMapLocation.getStreet() + "-" + currentAMapLocation.getStreetNum());
+            positionInfo.setAoiName(currentAMapLocation.getAoiName());
+            intent.putExtra("positioninfo",positionInfo);//实现Parcelable接口的对象
             intent.setClass(this, PositionActivity.class);
             startActivity(intent);
         }

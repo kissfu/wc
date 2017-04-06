@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 
+import pub.beans.PositionInfo;
 import pub.utils.MapUtil;
 import pub.utils.ToastUtil;
 
@@ -23,16 +24,13 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     private TextView tv_location;
     private TextView tv_poi;
 
-    private double longitude;
-    private double latitude;
-    private String cityCode;
-    private AMapLocation currentAMapLocation;
+    private PositionInfo positionInfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_position);
 
-        currentAMapLocation = (AMapLocation)getIntent().getParcelableExtra("amap");
+        positionInfo = (PositionInfo)getIntent().getParcelableExtra("positioninfo");
 
         send = (Button) findViewById(R.id.btn_send);
 
@@ -50,20 +48,14 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     //region intent extras
 
     private void initData(){
-        if(currentAMapLocation == null){
-            return;
-        }
-        ToastUtil.show(PositionActivity.this,"定位成功，获取地址信息。");
-        currentAMapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
-        latitude = currentAMapLocation.getLatitude();//获取纬度
-        longitude = currentAMapLocation.getLongitude();//获取经度
-        cityCode = currentAMapLocation.getCityCode();
-        tv_lat.setText("当前纬度：" + latitude);
-        tv_lon.setText("当前经度：" + longitude);
-        tv_location.setText("当前位置：" + currentAMapLocation.getAddress());
-        tv_city.setText("当前城市：" + currentAMapLocation.getProvince() + "-" + currentAMapLocation.getCity() + "-" + currentAMapLocation.getDistrict() + "-" + currentAMapLocation.getStreet() + "-" + currentAMapLocation.getStreetNum());
-        tv_poi.setText("当前位置："+currentAMapLocation.getAoiName());
-        currentAMapLocation.getAccuracy();//获取精度信息
+        ToastUtil.show(PositionActivity.this,"获取地址信息。");
+        //currentAMapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
+        tv_lat.setText("当前纬度：" + positionInfo.getLatLonPoint().getLatitude());
+        tv_lon.setText("当前经度：" + positionInfo.getLatLonPoint().getLongitude());
+        tv_location.setText("当前地址：" + positionInfo.getAddress());
+        tv_city.setText("当前城市：" + positionInfo.getAddressJoin());
+        tv_poi.setText("当前位置："+positionInfo.getAoiName());
+        //currentAMapLocation.getAccuracy();//获取精度信息
     }
     //endregion
 
@@ -72,9 +64,9 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     public void onClick(View v) {
         if (v == send) {
             Intent intent = new Intent();
-            intent.putExtra("longitude", longitude);
-            intent.putExtra("latitude", latitude);
-            intent.putExtra("cityCode", cityCode);
+            //intent.putExtra("longitude", longitude);
+            //intent.putExtra("latitude", latitude);
+            //intent.putExtra("cityCode", cityCode);
             //intent.setClass(this, ShareLocationActivity.class);
             //startActivity(intent);
         }
