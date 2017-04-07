@@ -64,11 +64,11 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     public void onClick(View v) {
         if (v == send) {
             Intent intent = new Intent();
-            //intent.putExtra("longitude", longitude);
-            //intent.putExtra("latitude", latitude);
-            //intent.putExtra("cityCode", cityCode);
-            //intent.setClass(this, ShareLocationActivity.class);
-            //startActivity(intent);
+            intent.putExtra("longitude", positionInfo.getLatLonPoint().getLongitude());
+            intent.putExtra("latitude", positionInfo.getLatLonPoint().getLatitude());
+            intent.putExtra("cityCode", positionInfo.getCityCode());
+            intent.setClass(this, SelectActivity.class);
+            startActivity(intent);
         }
     }
     //endregion
