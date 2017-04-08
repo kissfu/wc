@@ -143,9 +143,11 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
             //对amap添加移动地图事件监听器
             aMap.setOnCameraChangeListener(this);
 
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 3;
             locationMarker = aMap.addMarker(new MarkerOptions()
                     .anchor(0.5f, 0.5f)
-                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker)))
+                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker,options)))
                     .position(new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude())));
 
             //拿到地图中心的经纬度
@@ -226,6 +228,7 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
         geocoderSearch.getFromLocationAsyn(query);// 设置同步逆地理编码请求
     }
     //endregion
+
     //region implements AMap.OnMapClickListener
     @Override
     public void onMapClick(LatLng latLng) {

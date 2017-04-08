@@ -18,28 +18,35 @@
 
             <ImageView
                 android:id="@+id/base_back"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
+                android:layout_marginLeft="6dp"
                 android:background="@drawable/img_select"
-                android:padding="16dp"
-                android:src="@mipmap/ic_title_back_white"
-                android:visibility="visible" />
+                android:src="@mipmap/ic_title_back_white"/>
 
             <TextView
                 android:id="@+id/base_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_marginLeft="16dp"
+                android:layout_marginLeft="6dp"
                 android:layout_toRightOf="@+id/base_back"
-                android:ellipsize="end"
-                android:singleLine="true"
                 android:text="位置"
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
+
+            <ImageView
+                android:id="@+id/seach"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="6dp"
+                android:layout_toLeftOf="@+id/send"
+                android:background="@drawable/img_select"
+                android:src="@mipmap/search" />
             <TextView
                 android:id="@+id/send"
                 android:layout_width="wrap_content"
@@ -47,25 +54,10 @@
                 android:layout_alignParentRight="true"
                 android:layout_centerInParent="true"
                 android:gravity="center_vertical"
-                android:paddingBottom="8dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="8dp"
+                android:layout_marginRight="6dp"
                 android:text="发送"
                 android:textColor="@drawable/title_textview_selector"
-                android:textSize="16sp" />
-
-            <ImageView
-                android:id="@+id/seach"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_centerVertical="true"
-                android:layout_marginRight="10dp"
-                android:layout_toLeftOf="@+id/send"
-                android:background="@drawable/img_select"
-                android:src="@mipmap/search" />
-
-
+                android:textSize="18sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -81,19 +73,19 @@
 
             <ImageView
                 android:id="@+id/center_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_centerInParent="true"
-                android:paddingBottom="28dp"
+                android:translationY="-15dp"
+                android:scaleType="centerInside"
                 android:src="@mipmap/position" />
 
             <ImageButton
                 android:id="@+id/position_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_alignParentRight="true"
-                android:layout_gravity="end"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 android:background="@mipmap/ic_location"
                 android:visibility="visible" />
         </RelativeLayout>

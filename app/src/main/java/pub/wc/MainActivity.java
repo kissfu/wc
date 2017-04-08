@@ -210,16 +210,16 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
         if (mLocMarker != null) {
             return;
         }
-        Bitmap bMap = BitmapFactory.decodeResource(this.getResources(), R.mipmap.navi_map_gps_locked);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 2;
+        Bitmap bMap = BitmapFactory.decodeResource(this.getResources(), R.mipmap.navi_map_gps_locked,options);
         BitmapDescriptor des = BitmapDescriptorFactory.fromBitmap(bMap);
 
-//		BitmapDescriptor des = BitmapDescriptorFactory.fromResource(R.drawable.navi_map_gps_locked);
-        MarkerOptions options = new MarkerOptions();
-        options.icon(des);
-        options.anchor(0.5f, 0.5f);
-        options.position(latlng);
-        mLocMarker = aMap.addMarker(options);
-        mLocMarker.setTitle("wc");
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.icon(des);
+        markerOptions.anchor(0.5f, 0.5f);
+        markerOptions.position(latlng);
+        mLocMarker = aMap.addMarker(markerOptions);
     }
     //endregion
 

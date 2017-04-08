@@ -27,6 +27,7 @@
             android:value="01d0c6d43493cd263d1cd8d25dcfc8fb" />
 
         <activity
+            android:screenOrientation="portrait"
             android:name=".MainActivity"
             android:theme="@style/MyFullScreenTheme">
             <intent-filter>
@@ -38,8 +39,10 @@
         <!-- 定位需要的服务 使用2.0的定位需要加上这个 -->
         <service android:name="com.amap.api.location.APSService" />
 
-        <activity android:name=".PositionActivity" />
-        <activity android:name=".SelectActivity"></activity>
+        <activity android:name=".PositionActivity"
+            android:screenOrientation="portrait" android:theme="@style/MyFullScreenTheme"/>
+        <activity android:name=".SelectActivity"
+            android:screenOrientation="portrait" android:theme="@style/MyFullScreenTheme"/>
     </application>
 
 </manifest>
