@@ -48,14 +48,19 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     //region intent extras
 
     private void initData(){
-        ToastUtil.show(PositionActivity.this,"获取地址信息。");
-        //currentAMapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
-        tv_lat.setText("当前纬度：" + positionInfo.getLatLonPoint().getLatitude());
-        tv_lon.setText("当前经度：" + positionInfo.getLatLonPoint().getLongitude());
-        tv_location.setText("当前地址：" + positionInfo.getAddress());
-        tv_city.setText("当前城市：" + positionInfo.getAddressJoin());
-        tv_poi.setText("当前位置："+positionInfo.getAoiName());
-        //currentAMapLocation.getAccuracy();//获取精度信息
+        try{
+            ToastUtil.show(PositionActivity.this,"获取地址信息。");
+            //currentAMapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
+            tv_lat.setText("当前纬度：" + positionInfo.getLatLonPoint().getLatitude());
+            tv_lon.setText("当前经度：" + positionInfo.getLatLonPoint().getLongitude());
+            tv_location.setText("当前地址：" + positionInfo.getAddress());
+            tv_city.setText("当前城市：" + positionInfo.getAddressJoin());
+            tv_poi.setText("当前位置："+positionInfo.getAoiName());
+            //currentAMapLocation.getAccuracy();//获取精度信息
+        }catch (Exception e){
+            ToastUtil.show(PositionActivity.this,"获取地址信息。"+e.getMessage());
+        }
+
     }
     //endregion
 
@@ -64,9 +69,7 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     public void onClick(View v) {
         if (v == send) {
             Intent intent = new Intent();
-            intent.putExtra("longitude", positionInfo.getLatLonPoint().getLongitude());
-            intent.putExtra("latitude", positionInfo.getLatLonPoint().getLatitude());
-            intent.putExtra("cityCode", positionInfo.getCityCode());
+            intent.putExtra("positioninfo",positionInfo);//实现Parcelable接口的对象
             intent.setClass(this, SelectActivity.class);
             startActivity(intent);
         }

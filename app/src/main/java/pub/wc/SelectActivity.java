@@ -1,7 +1,7 @@
 package pub.wc;
 
-import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,7 +17,6 @@ import android.widget.Toast;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.MapView;
-import com.amap.api.maps2d.UiSettings;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.CameraPosition;
 import com.amap.api.maps2d.model.LatLng;
@@ -37,7 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pub.adapters.AddressAdapter;
+import pub.beans.PositionInfo;
 import pub.beans.SearchAddressInfo;
+import pub.utils.Constants;
 import pub.utils.ToastUtil;
 
 import static pub.utils.MapUtil.convertToLatLng;
@@ -46,45 +47,43 @@ import static pub.utils.MapUtil.convertToLatLonPoint;
 public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoiSearchListener,GeocodeSearch.OnGeocodeSearchListener,AMap.OnCameraChangeListener,AMap.OnMapClickListener,AdapterView.OnItemClickListener, View.OnClickListener {
 
     //extra
-    private String city;
-    private LatLonPoint latLonPoint;
+    private PositionInfo positionInfo;
 
     //ui ele
     private MapView mapView;
-    private ListView listView;
-    private ImageView centerImage;
-    private ImageButton locationButton;
-    private ImageView search;
-    private TextView send;
-    private ImageView back;
+    private ListView lvAddress;
+    private ImageView ivCenterMaker;
+    private ImageButton ibtnPosition;
+    private ImageView ivSearch;
+    private TextView tvOk;
+    private ImageView ivBack;
 
     //list
-    private ArrayList<SearchAddressInfo> mData = new ArrayList<>();
+    private ArrayList<SearchAddressInfo> addressList = new ArrayList<>();
     private AddressAdapter addressAdapter;
 
     //anim
-    private Animation centerAnimation;
+    private Animation animCenterPositionMaker;
 
     //map
     private AMap aMap;
-    private UiSettings uiSettings;
-    private Marker locationMarker;
     private LatLng mFinalChoosePosition;
     //map camera
+    //处理拖拽地图和点击地址列表某个地址。
     private boolean isHandDrag = true;
+    //第一次加载
     private boolean isFirstLoad = true;
+    //暂时没用
     private boolean isBackFromSearch = false;
-    //map search
+
+    //map geo_search
     private GeocodeSearch geocoderSearch;
-    private String addressName;
     public SearchAddressInfo mAddressInfoFirst = null;
 
+    //map poi_search
     private int currentPage = 0;// 当前页面，从0开始计数
     private PoiSearch.Query query;// Poi查询条件类
-    //map search ppo
     private PoiSearch poiSearch;
-    private PoiResult poiResult; // poi返回的结果
-    private List<PoiItem> poiItems;// poi数据
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,77 +91,91 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
         setContentView(R.layout.activity_select);
 
         //extra
-        double longitude = getIntent().getDoubleExtra("longitude", 0);
-        double latitude = getIntent().getDoubleExtra("latitude", 0);
-        city = getIntent().getStringExtra("cityCode");
-        //经纬度信息
-        latLonPoint = new LatLonPoint(latitude, longitude);
+        positionInfo = (PositionInfo)getIntent().getParcelableExtra("positioninfo");
 
         //ui ele
         mapView = (MapView) findViewById(R.id.mapview);
-        listView = (ListView) findViewById(R.id.listview);
-        centerImage = (ImageView) findViewById(R.id.center_image);
-        locationButton = (ImageButton) findViewById(R.id.position_btn);
-        search = (ImageView) findViewById(R.id.seach);
-        send = (TextView) findViewById(R.id.send);
-        back = (ImageView) findViewById(R.id.base_back);
+        lvAddress = (ListView) findViewById(R.id.lv_address);
+        ivCenterMaker = (ImageView) findViewById(R.id.iv_center_maker);
+        ibtnPosition = (ImageButton) findViewById(R.id.ibtn_position);
+        ivSearch = (ImageView) findViewById(R.id.iv_search);
+        tvOk = (TextView) findViewById(R.id.tv_ok);
+        ivBack = (ImageView) findViewById(R.id.iv_back);
 
-        search.setOnClickListener(this);
-        send.setOnClickListener(this);
-        back.setOnClickListener(this);
-        locationButton.setOnClickListener(this);
+        ivSearch.setOnClickListener(this);
+        tvOk.setOnClickListener(this);
+        ivBack.setOnClickListener(this);
+        ibtnPosition.setOnClickListener(this);
 
         mapView.onCreate(savedInstanceState);
         //anim
-        centerAnimation = AnimationUtils.loadAnimation(this, R.anim.center_anim);
+        animCenterPositionMaker = AnimationUtils.loadAnimation(this, R.anim.center_position_maker);
 
         //list
-        addressAdapter = new AddressAdapter(this, mData);
-        listView.setAdapter(addressAdapter);
-        listView.setOnItemClickListener(this);
+        addressAdapter = new AddressAdapter(this, addressList);
+        lvAddress.setAdapter(addressAdapter);
+        lvAddress.setOnItemClickListener(this);
         //
         initMap();
     }
+
+    //region Activity Life
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        mapView.onSaveInstanceState(outState);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+    //endregion
 
     private void initMap() {
 
         if (aMap == null) {
             aMap = mapView.getMap();
 
-            //地图ui界面设置
-            uiSettings = aMap.getUiSettings();
-
             //地图比例尺的开启
-            uiSettings.setScaleControlsEnabled(true);
+            aMap.getUiSettings().setScaleControlsEnabled(true);
 
             //关闭地图缩放按钮 就是那个加号 和减号
-            uiSettings.setZoomControlsEnabled(false);
+            aMap.getUiSettings().setZoomControlsEnabled(false);
 
+            //暂时没用
             aMap.setOnMapClickListener(this);
 
             //对amap添加移动地图事件监听器
             aMap.setOnCameraChangeListener(this);
 
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 3;
-            locationMarker = aMap.addMarker(new MarkerOptions()
+            options.inSampleSize = 3;//缩小1/3
+            Marker markerCurrent = aMap.addMarker(new MarkerOptions()
                     .anchor(0.5f, 0.5f)
-                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker,options)))
-                    .position(new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude())));
+                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker_current,options)))
+                    .position(convertToLatLng(positionInfo.getLatLonPoint())));
 
             //拿到地图中心的经纬度
-            mFinalChoosePosition = locationMarker.getPosition();
+            mFinalChoosePosition = markerCurrent.getPosition();
+
+            geocoderSearch = new GeocodeSearch(getApplicationContext());
+            //设置逆地理编码监听
+            geocoderSearch.setOnGeocodeSearchListener(this);
         }
-
-        setMap();
-        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude()), 20));
-    }
-    private void setMap() {
-
-        geocoderSearch = new GeocodeSearch(getApplicationContext());
-
-        //设置逆地理编码监听
-        geocoderSearch.setOnGeocodeSearchListener(this);
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(convertToLatLng(positionInfo.getLatLonPoint()), Constants.ZOOM_LEVEL));
     }
 
     //region implements AMap.OnCameraChangeListener
@@ -175,10 +188,7 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
     public void onCameraChangeFinish(CameraPosition cameraPosition) {
         //每次移动结束后地图中心的经纬度
         mFinalChoosePosition = cameraPosition.target;
-
-        centerImage.startAnimation(centerAnimation);
-
-
+        ivCenterMaker.startAnimation(animCenterPositionMaker);
         if (isHandDrag || isFirstLoad) {//手动去拖动地图
 
             // 开始进行poi搜索
@@ -205,18 +215,18 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
     protected void doSearchQueryByPosition() {
 
         currentPage = 0;
-        query = new PoiSearch.Query("", "", city);// 第一个参数表示搜索字符串，第二个参数表示poi搜索类型，第三个参数表示poi搜索区域（空字符串代表全国）
+        query = new PoiSearch.Query("", "", positionInfo.getCityCode());// 第一个参数表示搜索字符串，第二个参数表示poi搜索类型，第三个参数表示poi搜索区域（空字符串代表全国）
         query.setPageSize(20);// 设置每页最多返回多少条poiitem
         query.setPageNum(currentPage);// 设置查第一页
 
-        LatLonPoint llPoint = convertToLatLonPoint(mFinalChoosePosition);
+        LatLonPoint latLonPoint = convertToLatLonPoint(mFinalChoosePosition);
 
-        if (llPoint != null) {
+        if (latLonPoint != null) {
             poiSearch = new PoiSearch(this, query);
             poiSearch.setOnPoiSearchListener(this);  // 实现  onPoiSearched  和  onPoiItemSearched
-            poiSearch.setBound(new PoiSearch.SearchBound(llPoint, 5000, true));//
+            poiSearch.setBound(new PoiSearch.SearchBound(latLonPoint, Constants.POI_SEARCH_RANGE, true));//
             // 设置搜索区域为以lpTemp点为圆心，其周围5000米范围
-            poiSearch.searchPOIAsyn();// 异步搜索
+            poiSearch.searchPOIAsyn();// 异步搜索,触发回调方法
         }
     }
     /**
@@ -224,8 +234,8 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
      */
     public void getAddressFromLonLat(final LatLng latLonPoint) {
         // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
-        RegeocodeQuery query = new RegeocodeQuery(convertToLatLonPoint(latLonPoint), 200, GeocodeSearch.AMAP);
-        geocoderSearch.getFromLocationAsyn(query);// 设置同步逆地理编码请求
+        RegeocodeQuery query = new RegeocodeQuery(convertToLatLonPoint(latLonPoint), Constants.GEO_SEARCH_RANGE, GeocodeSearch.AMAP);
+        geocoderSearch.getFromLocationAsyn(query);// 设置同步逆地理编码请求,然后触发回调方法。
     }
     //endregion
 
@@ -239,20 +249,20 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
     //region implements View.OnClickListener
     @Override
     public void onClick(View v) {
-        if (v == locationButton) {
+        if (v == ibtnPosition) {
             //回到当前位置
-            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latLonPoint.getLatitude(), latLonPoint.getLongitude()), 18));
-        } else if (v == back) {
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(convertToLatLng(positionInfo.getLatLonPoint()), Constants.ZOOM_LEVEL));
+        } else if (v == ivBack) {
             finish();
-        } else if (v == search) {
+        } else if (v == ivSearch) {
 
             //Intent intent = new Intent(this, SearchAddressActivity.class);
-            //intent.putExtra("position", mFinalChoosePosition);
+            //intent.putExtra("maker_center", mFinalChoosePosition);
             //intent.putExtra("city", city);
             //startActivityForResult(intent, SEARCH_ADDDRESS);
             //isBackFromSearch = false;
 
-        } else if (v == send) {
+        } else if (v == tvOk) {
 
             sendLocaton();
 
@@ -260,7 +270,7 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
     }
     private void sendLocaton() {
         SearchAddressInfo addressInfo = null;
-        for (SearchAddressInfo info : mData) {
+        for (SearchAddressInfo info : addressList) {
             if (info.isChoose) {
                 addressInfo = info;
             }
@@ -281,17 +291,17 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
     //region implements AdapterView.OnItemClickListener
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        mFinalChoosePosition = convertToLatLng(mData.get(position).latLonPoint);
-        for (int i = 0; i < mData.size(); i++) {
-            mData.get(i).isChoose = false;
+        mFinalChoosePosition = convertToLatLng(addressList.get(position).latLonPoint);
+        for (int i = 0; i < addressList.size(); i++) {
+            addressList.get(i).isChoose = false;
         }
-        mData.get(position).isChoose = true;
+        addressList.get(position).isChoose = true;
 
         isHandDrag = false;
 
         // 点击之后，改变了地图中心位置， onCameraChangeFinish 也会调用
         // 只要地图发生改变，就会调用 onCameraChangeFinish ，不是说非要手动拖动屏幕才会调用该方法
-        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mFinalChoosePosition.latitude, mFinalChoosePosition.longitude), 20));
+        aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mFinalChoosePosition.latitude, mFinalChoosePosition.longitude), Constants.ZOOM_LEVEL));
 
     }
 
@@ -299,11 +309,11 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
 
     //region implements GeocodeSearch.OnGeocodeSearchListener
     @Override
-    public void onRegeocodeSearched(RegeocodeResult result, int i) {
+    public void onRegeocodeSearched(RegeocodeResult regeocodeResult, int i) {
         if (i == 1000) {//转换成功
-            if (result != null && result.getRegeocodeAddress() != null && result.getRegeocodeAddress().getFormatAddress() != null) {
+            if (regeocodeResult != null && regeocodeResult.getRegeocodeAddress() != null && regeocodeResult.getRegeocodeAddress().getFormatAddress() != null) {
                 //拿到详细地址
-                addressName = result.getRegeocodeAddress().getFormatAddress(); // 逆转地里编码不是每次都可以得到对应地图上的opi
+                String addressName = regeocodeResult.getRegeocodeAddress().getFormatAddress(); // 逆转地里编码不是每次都可以得到对应地图上的opi
 
                 //条目中第一个地址 也就是当前你所在的地址
                 mAddressInfoFirst = new SearchAddressInfo(addressName, addressName, false, convertToLatLonPoint(mFinalChoosePosition));
@@ -340,38 +350,30 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
         ToastUtil.show(this, infomation);
     }
     @Override
-    public void onPoiSearched(PoiResult result, int rcode) {
+    public void onPoiSearched(PoiResult poiResult, int rcode) {
         if (rcode == 1000) {
-            if (result != null && result.getQuery() != null) {// 搜索poi的结果
-                if (result.getQuery().equals(query)) {// 是否是同一条
-                    poiResult = result;
-                    poiItems = poiResult.getPois();// 取得第一页的poiitem数据，页数从数字0开始
+            if (poiResult != null && poiResult.getQuery() != null) {// 搜索poi的结果
+                if (poiResult.getQuery().equals(query)) {// 是否是同一条
+                    List<PoiItem> poiItems = poiResult.getPois();// 取得第一页的poiitem数据，页数从数字0开始
 
                     List<SuggestionCity> suggestionCities = poiResult.getSearchSuggestionCitys();// 当搜索不到poiitem数据时，会返回含有搜索关键字的城市信息
 
                     //搜索到数据
                     if (poiItems != null && poiItems.size() > 0) {
-
-                        mData.clear();
-
+                        addressList.clear();
                         //先将 逆地理编码过的当前地址 也就是条目中第一个地址 放到集合中
-                        mData.add(mAddressInfoFirst);
-
+                        addressList.add(mAddressInfoFirst);
                         SearchAddressInfo addressInfo = null;
-
                         for (PoiItem poiItem : poiItems) {
-
                             addressInfo = new SearchAddressInfo(poiItem.getTitle(), poiItem.getSnippet(), false, poiItem.getLatLonPoint());
-
-                            mData.add(addressInfo);
+                            addressList.add(addressInfo);
                         }
                         if (isHandDrag) {
-                            mData.get(0).isChoose = true;
+                            addressList.get(0).isChoose = true;
                         }
                         addressAdapter.notifyDataSetChanged();
 
-                    } else if (suggestionCities != null
-                            && suggestionCities.size() > 0) {
+                    } else if (suggestionCities != null && suggestionCities.size() > 0) {
                         showSuggestCity(suggestionCities);
                     } else {
                         ToastUtil.show(SelectActivity.this, "对不起，没有搜索到相关数据");

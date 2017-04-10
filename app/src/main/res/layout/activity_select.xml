@@ -11,91 +11,89 @@
         android:layout_height="match_parent">
 
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/base_title_view"
+            android:id="@+id/rl_title"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="@color/base_title_color">
+            android:background="@color/color_title">
 
             <ImageView
-                android:id="@+id/base_back"
+                android:id="@+id/iv_back"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="6dp"
-                android:background="@drawable/img_select"
+                android:background="@drawable/img_selector"
                 android:src="@mipmap/ic_title_back_white"/>
 
             <TextView
-                android:id="@+id/base_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="6dp"
-                android:layout_toRightOf="@+id/base_back"
+                android:layout_toRightOf="@+id/iv_back"
                 android:text="位置"
                 android:textColor="@color/white"
                 android:textSize="18sp" />
-
-
             <ImageView
-                android:id="@+id/seach"
+                android:id="@+id/iv_search"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 android:layout_centerVertical="true"
                 android:layout_marginRight="6dp"
-                android:layout_toLeftOf="@+id/send"
-                android:background="@drawable/img_select"
-                android:src="@mipmap/search" />
+                android:layout_toLeftOf="@+id/tv_ok"
+                android:background="@drawable/img_selector"
+                android:src="@mipmap/ic_title_search" android:visibility="invisible" />
             <TextView
-                android:id="@+id/send"
+                android:id="@+id/tv_ok"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_alignParentRight="true"
                 android:layout_centerInParent="true"
                 android:gravity="center_vertical"
                 android:layout_marginRight="6dp"
-                android:text="发送"
-                android:textColor="@drawable/title_textview_selector"
+                android:text="选择"
+                android:textColor="@drawable/txt_selector"
                 android:textSize="18sp" />
         </RelativeLayout>
 
         <RelativeLayout
-            android:id="@+id/top"
+            android:id="@+id/rl_top"
             android:layout_width="match_parent"
             android:layout_height="250dp"
-            android:layout_below="@+id/base_title_view">
+            android:layout_below="@+id/rl_title">
 
             <com.amap.api.maps2d.MapView
                 android:id="@+id/mapview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"></com.amap.api.maps2d.MapView>
+                android:layout_height="match_parent" />
 
             <ImageView
-                android:id="@+id/center_image"
+                android:id="@+id/iv_center_maker"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_centerInParent="true"
                 android:translationY="-15dp"
                 android:scaleType="centerInside"
-                android:src="@mipmap/position" />
+                android:src="@mipmap/maker_center" />
 
             <ImageButton
-                android:id="@+id/position_btn"
+                android:id="@+id/ibtn_position"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
-                android:layout_marginTop="10dp"
-                android:background="@mipmap/ic_location"
-                android:visibility="visible" />
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@mipmap/ic_location" />
         </RelativeLayout>
 
 
         <ListView
-            android:id="@+id/listview"
+            android:id="@+id/lv_address"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/top">
+            android:layout_below="@+id/rl_top">
 
         </ListView>
     </RelativeLayout>

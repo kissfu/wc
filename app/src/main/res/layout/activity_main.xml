@@ -15,15 +15,6 @@
             android:layout_height="match_parent"/>
 
         <ImageButton
-            android:id="@+id/ibtn_position"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp"
-            android:background="@mipmap/ic_location"/>
-        <ImageButton
             android:id="@+id/ibtn_add_position"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -32,6 +23,17 @@
             android:layout_marginLeft="10dp"
             android:layout_marginBottom="10dp"
             android:background="@mipmap/ic_location"/>
+
+        <ImageButton
+            android:id="@+id/ibtn_position"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@mipmap/ic_location"/>
+
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>
