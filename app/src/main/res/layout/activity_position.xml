@@ -9,13 +9,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <Button
-            android:id="@+id/btn_send"
+            android:id="@+id/btn_select"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="选择位置" />
 
         <TextView
-            android:id="@+id/location"
+            android:id="@+id/tv_address"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
@@ -23,7 +23,7 @@
             android:text="当前位置信息：" />
 
         <TextView
-            android:id="@+id/city"
+            android:id="@+id/tv_address_join"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
@@ -31,7 +31,7 @@
             android:text="当前城市：" />
 
         <TextView
-            android:id="@+id/poi"
+            android:id="@+id/tv_poi"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
@@ -40,7 +40,7 @@
 
 
         <TextView
-            android:id="@+id/lon"
+            android:id="@+id/tv_lon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
@@ -48,7 +48,7 @@
             android:text="当前经度：" />
 
         <TextView
-            android:id="@+id/lat"
+            android:id="@+id/tv_lat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"

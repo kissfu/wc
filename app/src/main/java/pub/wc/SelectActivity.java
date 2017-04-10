@@ -1,5 +1,6 @@
 package pub.wc;
 
+import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
@@ -264,11 +265,11 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
 
         } else if (v == tvOk) {
 
-            sendLocaton();
+            sendLocation();
 
         }
     }
-    private void sendLocaton() {
+    private void sendLocation() {
         SearchAddressInfo addressInfo = null;
         for (SearchAddressInfo info : addressList) {
             if (info.isChoose) {
@@ -276,11 +277,10 @@ public class SelectActivity extends AppCompatActivity implements PoiSearch.OnPoi
             }
         }
         if (addressInfo != null) {
-
-            ToastUtil.show(this, "要发送的数据："
-                    + "\n 经度：" + addressInfo.latLonPoint.getLongitude()
-                    + "\n 纬度：" + addressInfo.latLonPoint.getLatitude()
-                    + "\n 地址：" + addressInfo.addressName);
+            Intent intent = new Intent();
+            intent.putExtra("address", addressInfo);
+            setResult(Constants.REQ_CODE_POSITION, intent);
+            finish();
         } else {
             ToastUtil.show(this, "请选择地址");
         }

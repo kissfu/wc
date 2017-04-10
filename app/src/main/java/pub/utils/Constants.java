@@ -10,4 +10,7 @@ public class Constants {
     //米
     public static final float GEO_SEARCH_RANGE = 200;
     public static final int POI_SEARCH_RANGE = 500;
+
+    public static final int REQ_CODE_POSITION = 1;
+    public static final int RSP_CODE_POSITION = 2;
 }
