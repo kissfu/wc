@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +31,7 @@ import java.util.concurrent.Executors;
 
 import pub.beans.PositionInfo;
 import pub.beans.SearchAddressInfo;
+import pub.beans.WCInfo;
 import pub.utils.Constants;
 import pub.utils.MapUtil;
 import pub.utils.ToastUtil;
@@ -40,28 +44,60 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     private TextView tvPoi;
     private TextView tvLon;
     private TextView tvLat;
+    RadioGroup rgSex;
+    RadioGroup rgTypeFee;
+    EditText etRemark;
+    EditText etContact;
+    private Button btnAdd;
 
     private PositionInfo positionInfo;
     private GeocodeSearch geocoderSearch;
     private ExecutorService mExecutorService;
+    private WCInfo wcInfo = new WCInfo();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_position);
 
         positionInfo = (PositionInfo)getIntent().getParcelableExtra("positioninfo");
-
+        positionInfo.setWcInfo(wcInfo);
         btnSelect = (Button) findViewById(R.id.btn_select);
+        btnSelect.setOnClickListener(this);
         tvAddress = (TextView) findViewById(R.id.tv_address);
         tvAddressJoin = (TextView) findViewById(R.id.tv_address_join);
         tvPoi = (TextView) findViewById(R.id.tv_poi);
         tvLon = (TextView) findViewById(R.id.tv_lon);
         tvLat = (TextView) findViewById(R.id.tv_lat);
+        rgSex = (RadioGroup)this.findViewById(R.id.rg_sex);
+        rgSex.setOnCheckedChangeListener(rgListener);
+        rgTypeFee = (RadioGroup)this.findViewById(R.id.rg_typeFee);
+        rgTypeFee.setOnCheckedChangeListener(rgListener);
+        etContact = (EditText) findViewById(R.id.et_contact);
+        etRemark = (EditText) findViewById(R.id.et_remark);
+        btnAdd = (Button) findViewById(R.id.btn_add);
+        btnAdd.setOnClickListener(this);
 
-        btnSelect.setOnClickListener(this);
         getAddresses();
     }
 
+    //region RadioGroup.OnCheckedChangeListener
+    RadioGroup.OnCheckedChangeListener rgListener = new RadioGroup.OnCheckedChangeListener() {
+         @Override
+         public void onCheckedChanged(RadioGroup arg0, int arg1) {
+            //获取变更后的选中项的ID
+             int radioButtonId = arg0.getCheckedRadioButtonId();
+            //根据ID获取RadioButton的实例
+            RadioButton rb = (RadioButton)PositionActivity.this.findViewById(radioButtonId);
+            //更新文本内容，以符合选中项
+             if(arg0 == rgSex){
+                 wcInfo.setSex(rb.getText().toString());
+             }else if(arg0 == rgTypeFee){
+                 wcInfo.setTypeFee(rb.getText().toString());
+             }
+
+         }
+    };
+    //endregion
 
     //region Handler Message
     private Handler msgHandler = new Handler(){
@@ -143,6 +179,11 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
             intent.setClass(this, SelectActivity.class);
             startActivityForResult(intent, Constants.REQ_CODE_POSITION);
             //startActivity(intent);
+        }else if(v == btnAdd){
+            wcInfo.setContact(etContact.getText().toString());
+            positionInfo.setRemark(etRemark.getText().toString());
+
+            //
         }
     }
 

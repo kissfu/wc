@@ -254,11 +254,12 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     //regionm View.OnClickListener
     @Override
     public void onClick(View v) {
+        if(currentAMapLocation == null){
+            return;
+        }
         if (v == ibtnLocation) {
-            if(currentAMapLocation != null){
-                //回到当前位置
-                aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()), 18));
-            }
+            //回到当前位置
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()), 18));
         }else if(v == ibtnAddLocation){
             Intent intent = new Intent();
             PositionInfo positionInfo = new PositionInfo();

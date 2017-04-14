@@ -18,17 +18,10 @@ public class PositionInfo  implements Parcelable {
     private  String aoiName;
     private LatLonPoint latLonPoint;
     /**
-     * 性别0 是女，1 是男，2是混合
-     */
-    private int sex;
-    /**
      * 摘要；附注;注意
      */
     private String remark;
-    /**
-     * 厕所类型，0 公共，1 收费，2 分享
-     */
-    private int typeWC;
+    private WCInfo wcInfo;
     //endregion
 
     //region Properties
@@ -73,14 +66,6 @@ public class PositionInfo  implements Parcelable {
         this.latLonPoint = latLonPoint;
     }
 
-    public int getSex() {
-        return sex;
-    }
-
-    public void setSex(int sex) {
-        this.sex = sex;
-    }
-
     public String getRemark() {
         return remark;
     }
@@ -89,12 +74,12 @@ public class PositionInfo  implements Parcelable {
         this.remark = remark;
     }
 
-    public int getTypeWC() {
-        return typeWC;
+    public WCInfo getWcInfo() {
+        return wcInfo;
     }
 
-    public void setTypeWC(int typeWC) {
-        this.typeWC = typeWC;
+    public void setWcInfo(WCInfo wcInfo) {
+        this.wcInfo = wcInfo;
     }
 
     //endregion
@@ -111,10 +96,8 @@ public class PositionInfo  implements Parcelable {
         addressJoin = in.readString();
         aoiName = in.readString();
         latLonPoint = in.readParcelable(LatLonPoint.class.getClassLoader());
-        sex = in.readInt();
         remark = in.readString();
-        typeWC = in.readInt();
-
+        wcInfo = in.readParcelable(WCInfo.class.getClassLoader());
     }
 
     public static final Creator<PositionInfo> CREATOR = new Creator<PositionInfo>() {
@@ -143,9 +126,8 @@ public class PositionInfo  implements Parcelable {
         dest.writeString(addressJoin);
         dest.writeString(aoiName);
         dest.writeParcelable(latLonPoint,flags);
-        dest.writeInt(sex);
         dest.writeString(remark);
-        dest.writeInt(typeWC);
+        dest.writeParcelable(wcInfo,flags);
     }
     //endregion
 }

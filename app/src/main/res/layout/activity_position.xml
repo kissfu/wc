@@ -55,31 +55,81 @@
             android:layout_marginTop="20dp"
             android:text="当前纬度：" />
 
-        <RelativeLayout
+        <TableRow
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="20dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:gravity="center_vertical" >
             <TextView
+                android:id="@+id/tv_sex"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="性别："/>
+                android:text="厕所性别："/>
             <RadioGroup android:id="@+id/rg_sex"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:layout_marginTop="20dp"
                 android:orientation="horizontal">
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"  android:text="男"/>
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"  android:text="女"/>
-                <RadioButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"  android:text="混合"/>
+                <RadioButton android:id="@+id/rb_mix"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="男女"
+                    android:checked="true"/>
+                <RadioButton android:id="@+id/rb_male"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"  android:text="男"/>
+                <RadioButton android:id="@+id/rb_female"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"  android:text="女"/>
             </RadioGroup>
-        </RelativeLayout>
-
+        </TableRow>
+        <TableRow
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="收费类型："/>
+            <RadioGroup android:id="@+id/rg_typeFee"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/rb_free"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="免费"
+                    android:checked="true"/>
+                <RadioButton android:id="@+id/rb_fee"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"  android:text="收费"/>
+                <RadioButton android:id="@+id/rb_share"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"  android:text="分享"/>
+            </RadioGroup>
+        </TableRow>
+        <TableRow
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="联系方式："/>
+            <EditText android:id="@+id/et_contact"/>
+        </TableRow>
+        <TableRow
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="补充内容："/>
+            <EditText android:id="@+id/et_remark"/>
+        </TableRow>
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="添加位置" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
