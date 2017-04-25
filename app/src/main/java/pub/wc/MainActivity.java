@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -29,6 +30,7 @@ import com.amap.api.maps2d.model.VisibleRegion;
 import com.amap.api.services.core.LatLonPoint;
 
 import pub.beans.PositionInfo;
+import pub.utils.Constants;
 import pub.utils.SensorEventHelper;
 import pub.utils.ToastUtil;
 
@@ -163,11 +165,11 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (mListener != null && aMapLocation != null) {
             if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
-                ToastUtil.show(this,"定位成功");
+                //Log.i(Constants.LOG_TAG, "定位成功");
                 addSensorMaker(aMapLocation);
             } else {
                 String errText = "定位失败," + aMapLocation.getErrorCode()+ ": " + aMapLocation.getErrorInfo();
-                ToastUtil.show(this,errText);
+                Log.i(Constants.LOG_TAG,errText);
             }
         }
     }

@@ -1,6 +1,7 @@
 package pub.wc;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
@@ -25,6 +26,7 @@ import com.amap.api.services.geocoder.GeocodeSearch;
 import com.amap.api.services.geocoder.RegeocodeAddress;
 import com.amap.api.services.geocoder.RegeocodeQuery;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,9 +34,15 @@ import java.util.concurrent.Executors;
 import pub.beans.PositionInfo;
 import pub.beans.SearchAddressInfo;
 import pub.beans.WCInfo;
+import pub.managers.ReqCallBack;
+import pub.managers.RequestManager;
 import pub.utils.Constants;
 import pub.utils.MapUtil;
+import pub.utils.ThreadUtil;
 import pub.utils.ToastUtil;
+
+import static pub.managers.RequestManager.TYPE_POST_FORM;
+import static pub.managers.RequestManager.TYPE_POST_JSON;
 
 public class PositionActivity extends AppCompatActivity  implements View.OnClickListener  {
 
@@ -52,8 +60,8 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
 
     private PositionInfo positionInfo;
     private GeocodeSearch geocoderSearch;
-    private ExecutorService mExecutorService;
     private WCInfo wcInfo = new WCInfo();
+    private ProgressDialog dialogProgress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,7 +86,28 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
         btnAdd.setOnClickListener(this);
 
         getAddresses();
+        init();
     }
+    //region ProgressDialog
+    private void init() {
+        if(null == dialogProgress) {
+            dialogProgress = new ProgressDialog(this);
+            dialogProgress.setCanceledOnTouchOutside(false);
+        }
+    }
+    public void showProgressDialog() {
+        if(dialogProgress!=null && !dialogProgress.isShowing()) {
+            dialogProgress.setMessage("正在加载...");
+            dialogProgress.show();
+        }
+    }
+
+    public void dismissProgressDialog() {
+        if(dialogProgress!=null && dialogProgress.isShowing()){
+            dialogProgress.dismiss();
+        }
+    }
+    //endregion
 
     //region RadioGroup.OnCheckedChangeListener
     RadioGroup.OnCheckedChangeListener rgListener = new RadioGroup.OnCheckedChangeListener() {
@@ -104,26 +133,105 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
         public void handleMessage(Message msg) {
             if(msg.what == 1){
                 initData();
-            }else {
+            }else{
                 ToastUtil.showerror(PositionActivity.this, msg.arg1);
             }
+            dismissProgressDialog();
         }
     };
+    //endregion
+
+    //region implements View.OnClickListener
+
+    @Override
+    public void onClick(View v) {
+        if (v == btnSelect) {
+            Intent intent = new Intent();
+            intent.putExtra("positioninfo",positionInfo);//实现Parcelable接口的对象
+            intent.setClass(this, SelectActivity.class);
+            startActivityForResult(intent, Constants.REQ_CODE_POSITION);
+            //startActivity(intent);
+        }else if(v == btnAdd){
+            wcInfo.setContact(etContact.getText().toString());
+            positionInfo.setRemark(etRemark.getText().toString());
+            addAddressToServer();
+        }
+    }
+    //endregion
+
+    //region override Activity
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Constants.REQ_CODE_POSITION && resultCode == Constants.REQ_CODE_POSITION) {
+            SearchAddressInfo info = (SearchAddressInfo) data.getParcelableExtra("address");
+            positionInfo.setLatLonPoint(info.latLonPoint);
+            getAddresses();
+        }
+    }
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(PositionActivity.this);
+        builder.setTitle("返回确认")
+                .setMessage("当前填写信息可能会被替换！")
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {ToastUtil.show(PositionActivity.this,"已经取消");}})
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {PositionActivity.super.onBackPressed();}
+                });
+        builder.show();
+    }
 
     //endregion
 
-    //region intent extras
+    //region private Methods
+
+    /**
+     * add position to server
+     */
+    private void addAddressToServer() {
+        showProgressDialog();
+        ThreadUtil.getCachedThreadPool().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    RequestManager.getInstance(PositionActivity.this).requestAsyn("index.php",TYPE_POST_FORM,positionInfo.toMap(),reqCallBack);
+                } catch (Exception e) {
+                    Message msg = msgHandler.obtainMessage();
+                    msg.what = 0;
+                    msgHandler.sendMessage(msg);
+                }
+            }
+        });
+    }
+
+    ReqCallBack reqCallBack = new ReqCallBack() {
+        @Override
+        public void onReqSuccess(Object result) {
+            Log.i(Constants.LOG_TAG,"ok,"+result);
+            dismissProgressDialog();
+        }
+
+        @Override
+        public void onReqFailed(String errorMsg) {
+            Log.i(Constants.LOG_TAG,"no,"+errorMsg);
+            dismissProgressDialog();
+        }
+    };
 
     /**
      * 响应逆地理编码的批量请求
      */
     private void getAddresses() {
-        if (mExecutorService == null) {
-            mExecutorService = Executors.newSingleThreadExecutor();
+        if (geocoderSearch == null) {
             geocoderSearch = new GeocodeSearch(this);
         }
-
-        mExecutorService.submit(new Runnable() {
+        showProgressDialog();
+        ThreadUtil.getCachedThreadPool().submit(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -154,66 +262,16 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
 
     private void initData(){
         try{
-            ToastUtil.show(PositionActivity.this,"获取地址信息。");
-            //currentAMapLocation.getLocationType();//获取当前定位结果来源，如网络定位结果，详见定位类型表
+            Log.i(Constants.LOG_TAG,"获取地址信息。");
             tvAddress.setText("当前地址：" + positionInfo.getAddress());
             tvAddressJoin.setText("当前城市：" + positionInfo.getAddressJoin());
             tvPoi.setText("当前位置："+positionInfo.getAoiName());
             tvLon.setText("当前经度：" + positionInfo.getLatLonPoint().getLongitude());
             tvLat.setText("当前纬度：" + positionInfo.getLatLonPoint().getLatitude());
-            //currentAMapLocation.getAccuracy();//获取精度信息
         }catch (Exception e){
-            ToastUtil.show(PositionActivity.this,"获取地址信息。"+e.getMessage());
+            Log.i(Constants.LOG_TAG,"获取地址信息。"+e.getMessage());
         }
 
-    }
-    //endregion
-
-    //region implements View.OnClickListener
-
-    @Override
-    public void onClick(View v) {
-        if (v == btnSelect) {
-            Intent intent = new Intent();
-            intent.putExtra("positioninfo",positionInfo);//实现Parcelable接口的对象
-            intent.setClass(this, SelectActivity.class);
-            startActivityForResult(intent, Constants.REQ_CODE_POSITION);
-            //startActivity(intent);
-        }else if(v == btnAdd){
-            wcInfo.setContact(etContact.getText().toString());
-            positionInfo.setRemark(etRemark.getText().toString());
-
-            //
-        }
-    }
-
-    //endregion
-
-    //region override Activity
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == Constants.REQ_CODE_POSITION && resultCode == Constants.REQ_CODE_POSITION) {
-            SearchAddressInfo info = (SearchAddressInfo) data.getParcelableExtra("address");
-            positionInfo.setLatLonPoint(info.latLonPoint);
-            getAddresses();
-        }
-    }
-    @Override
-    public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(PositionActivity.this);
-        builder.setTitle("返回确认")
-                .setMessage("当前填写信息可能会被替换！")
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {ToastUtil.show(PositionActivity.this,"已经取消");}})
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {PositionActivity.super.onBackPressed();}
-                });
-        builder.show();
     }
 
     //endregion

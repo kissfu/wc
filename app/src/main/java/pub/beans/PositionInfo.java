@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import com.amap.api.services.core.LatLonPoint;
 
+import java.util.HashMap;
+
 /**
  * Created by able on 2017/4/6.
  */
@@ -130,4 +132,28 @@ public class PositionInfo  implements Parcelable {
         dest.writeParcelable(wcInfo,flags);
     }
     //endregion
+
+
+    /** 和服务端对应
+     public function initFromPost(){
+     $this->city_code = $_POST['city_code'];
+     $this->longitude = $_POST['longitude'];
+     $this->latitude = $_POST['latitude'];
+     $this->type_fee = $_POST['type_fee'];
+     $this->sex = $_POST['sex'];
+     $this->contact = $_POST['contact'];
+     $this->remark = $_POST['remark'];
+     }
+     */
+    public HashMap<String, String> toMap(){
+        HashMap<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("city_code",getCityCode());
+        paramsMap.put("longitude",getLatLonPoint().getLongitude()+"");
+        paramsMap.put("latitude",getLatLonPoint().getLatitude()+"");
+        paramsMap.put("type_fee",getWcInfo().getTypeFee()+"");
+        paramsMap.put("sex",getWcInfo().getSex()+"");
+        paramsMap.put("contact",getWcInfo().getContact());
+        paramsMap.put("remark",getRemark());
+        return paramsMap;
+    }
 }
