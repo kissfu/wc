@@ -1,14 +1,19 @@
 package pub.wc;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -28,14 +33,35 @@ import com.amap.api.maps2d.model.Marker;
 import com.amap.api.maps2d.model.MarkerOptions;
 import com.amap.api.maps2d.model.VisibleRegion;
 import com.amap.api.services.core.LatLonPoint;
+import com.amap.api.services.geocoder.GeocodeSearch;
+import com.amap.api.services.geocoder.RegeocodeAddress;
+import com.amap.api.services.geocoder.RegeocodeQuery;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 import pub.beans.PositionInfo;
+import pub.beans.WCLocation;
+import pub.managers.ReqCallBack;
+import pub.managers.RequestManager;
 import pub.utils.Constants;
 import pub.utils.SensorEventHelper;
+import pub.utils.ThreadUtil;
 import pub.utils.ToastUtil;
 
-public class MainActivity extends AppCompatActivity implements LocationSource,AMapLocationListener,AMap.OnCameraChangeListener,View.OnClickListener {
+import static pub.managers.RequestManager.TYPE_POST_FORM;
 
+public class MainActivity extends AppCompatActivity implements LocationSource,AMapLocationListener, AMap.OnCameraChangeListener,View.OnClickListener,AMap.OnMapClickListener,AMap.OnMarkerClickListener {
+
+    private RelativeLayout rlMakerDetail;
+    private TextView tvTitle;
+    private TextView tvAddress;
     private MapView mapView;
     private AMap aMap;
     private ImageButton ibtnLocation;
@@ -44,11 +70,16 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     private AMapLocationClient mlocationClient;
     private AMapLocationClientOption mLocationOption;
     private AMapLocation currentAMapLocation;
+    private GeocodeSearch geocoderSearch;
+    private Marker selectMarker;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        rlMakerDetail = (RelativeLayout) findViewById(R.id.rl_maker_detail);
+        tvTitle = (TextView) findViewById(R.id.tv_title);
+        tvAddress = (TextView) findViewById(R.id.tv_address);
         ibtnLocation = (ImageButton) findViewById(R.id.ibtn_position);
         ibtnLocation.setOnClickListener(this);
         ibtnAddLocation = (ImageButton) findViewById(R.id.ibtn_add_position);
@@ -56,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
         mapView = (MapView) findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);// 此方法必须重写
         init();
+        initProgressDialog();
     }
     /**
      * 初始化AMap对象
@@ -69,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
             //地图比例尺的开启
             aMap.getUiSettings().setScaleControlsEnabled(true);
             aMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+            aMap.setOnMapClickListener(this);
+            aMap.setOnMarkerClickListener(this);
             //设置地图默认的定位按钮是否显示
             //aMap.setOnCameraChangeListener(this);// 对amap添加移动地图事件监听器
             //重力感应
@@ -86,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        //每次界面显示的时候刷附近厕所
+        getWcAddresses();
     }
 
     /**
@@ -190,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
             //mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
             //aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
             aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
+            getWcAddresses();
         } else {
             mCircle.setCenter(latLng);
             mCircle.setRadius(amapLocation.getAccuracy());
@@ -253,28 +290,205 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
 
     //endregion
 
-    //regionm View.OnClickListener
+    //region View.OnClickListener,AMap.OnMapClickListener,AMap.OnMarkerClickListener
     @Override
     public void onClick(View v) {
-        if(currentAMapLocation == null){
-            return;
-        }
+        PositionInfo positionInfo = getPositionInfo();
+        if(positionInfo == null){return;}
         if (v == ibtnLocation) {
             //回到当前位置
-            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()), 18));
+            aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(positionInfo.getLatLonPoint().getLatitude(), positionInfo.getLatLonPoint().getLongitude()), 18));
         }else if(v == ibtnAddLocation){
             Intent intent = new Intent();
-            PositionInfo positionInfo = new PositionInfo();
-            positionInfo.setCityCode(currentAMapLocation.getCityCode());
-            positionInfo.setLatLonPoint(new LatLonPoint(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()));
-            positionInfo.setAddress(currentAMapLocation.getAddress());
-            positionInfo.setAddressJoin(currentAMapLocation.getProvince() + "-" + currentAMapLocation.getCity() + "-" + currentAMapLocation.getDistrict() + "-" + currentAMapLocation.getStreet() + "-" + currentAMapLocation.getStreetNum());
-            positionInfo.setAoiName(currentAMapLocation.getAoiName());
             intent.putExtra("positioninfo",positionInfo);//实现Parcelable接口的对象
             intent.setClass(this, PositionActivity.class);
             startActivity(intent);
         }
     }
 
+    @Override
+    public void onMapClick(LatLng latLng) {
+        isShowMakerDetail(false);
+        returnToOriginalMaker(null);
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (marker.getObject() != null) {
+            isShowMakerDetail(true);
+            try {
+                WCLocation obj = (WCLocation) marker.getObject();
+                if (selectMarker == null) {
+                    selectMarker = marker;
+                } else {
+                    //将之前被点击的marker置为原来的状态
+                    returnToOriginalMaker(marker);
+                    selectMarker = marker;
+                }
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker_pressed)));
+                tvTitle.setText(obj.getTitle()+"");
+                tvAddress.setText(obj.getAddress());
+            } catch (Exception e) {
+                Log.e(Constants.LOG_TAG,"error,"+e);
+            }
+        }else {
+            isShowMakerDetail(false);
+            returnToOriginalMaker(marker);
+        }
+        return true;
+    }
+    //endregion
+
+    //region private methods
+
+    private void returnToOriginalMaker(Marker marker){
+        if(selectMarker == null)return;
+        if(selectMarker.equals(marker))return;
+        WCLocation obj = (WCLocation) selectMarker.getObject();
+        if(obj == null)return;
+        setMakerIcon(selectMarker,obj.getSex());
+    }
+    private void setMakerIcon(Marker marker,int sex){
+        switch (sex){
+            case 0:
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker_0)));
+                break;
+            case 1:
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker_1)));
+                break;
+            case 2:
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker_2)));
+                break;
+        }
+    }
+    private void isShowMakerDetail(boolean isShow){
+        if (isShow) {
+            rlMakerDetail.setVisibility(View.VISIBLE);
+        } else {
+            rlMakerDetail.setVisibility(View.GONE);
+        }
+    }
+
+    private PositionInfo getPositionInfo(){
+        if(currentAMapLocation == null){
+            return null;
+        }
+        PositionInfo positionInfo = new PositionInfo();
+        positionInfo.setCityCode(currentAMapLocation.getCityCode());
+        positionInfo.setLatLonPoint(new LatLonPoint(currentAMapLocation.getLatitude(), currentAMapLocation.getLongitude()));
+        positionInfo.setAddress(currentAMapLocation.getAddress());
+        positionInfo.setAddressJoin(currentAMapLocation.getProvince() + "-" + currentAMapLocation.getCity() + "-" + currentAMapLocation.getDistrict() + "-" + currentAMapLocation.getStreet() + "-" + currentAMapLocation.getStreetNum());
+        positionInfo.setAoiName(currentAMapLocation.getAoiName());
+        return positionInfo;
+    }
+
+    private void getWcAddresses(){
+        final PositionInfo positionInfo = getPositionInfo();
+        if(positionInfo == null){return;}
+        //showProgressDialog();
+        ThreadUtil.getCachedThreadPool().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    HashMap<String, String> hashMap = positionInfo.toMap();
+                    hashMap.put(Constants.REQ_ACTION_KEY,Constants.REQ_ACTION_GET);
+                    RequestManager.getInstance(MainActivity.this).requestAsyn(Constants.REQ_API_PHP,TYPE_POST_FORM,hashMap,reqCallBack);
+                } catch (Exception e) {
+                    Log.e(Constants.LOG_TAG,"error,"+e);
+                    dismissProgressDialog();
+                }
+            }
+        });
+    }
+
+    ArrayList<WCLocation> listScreen = new ArrayList<WCLocation>();
+    private boolean isContain(WCLocation info){
+        for (final WCLocation item:listScreen){
+            if(info.getLongitude() == item.getLongitude() && info.getLatitude() == item.getLatitude()){
+                return true;
+            }
+        }
+        return false;
+    }
+    private synchronized void setMarkerDetail(RegeocodeAddress result,WCLocation row){
+        MarkerOptions markerOps = new MarkerOptions().position(new LatLng(row.getLatitude(), row.getLongitude())).title(result.getFormatAddress());
+        StringBuilder sb = new StringBuilder();
+        sb.append(result.getStreetNumber().getStreet()+result.getStreetNumber().getNumber());
+        sb.append("-"+row.getSexStr());
+        sb.append("-"+row.getTypeFeeStr());
+        sb.append("-"+row.getContact());
+        row.setTitle(sb.toString());
+        row.setAddress(result.getFormatAddress());
+        Marker marker = aMap.addMarker(markerOps);
+        marker.setObject(row);
+        setMakerIcon(marker,row.getSex());
+    }
+    private void addWcMarkers(JsonArray jarr){
+        if (geocoderSearch == null) { geocoderSearch = new GeocodeSearch(this); }
+
+        Gson gson = new Gson();
+        for(JsonElement item : jarr ){
+            final WCLocation row = gson.fromJson( item , WCLocation.class);
+            if(isContain(row))continue;
+
+            ThreadUtil.getSingleThreadPool().submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
+                        RegeocodeQuery query = new RegeocodeQuery(new LatLonPoint(row.getLatitude(), row.getLongitude()), Constants.GEO_SEARCH_RANGE, GeocodeSearch.AMAP);
+                        RegeocodeAddress result = geocoderSearch.getFromLocation(query);// 设置同步逆地理编码请求
+                        if (result != null && result.getFormatAddress() != null) {
+                            setMarkerDetail(result, row);
+                        }
+                    } catch (Exception e) {
+                        dismissProgressDialog();
+                    }
+                }
+            });
+            listScreen.add(row);
+        }
+    }
+
+    ReqCallBack reqCallBack = new ReqCallBack() {
+        @Override
+        public void onReqSuccess(Object result) {
+            Log.i(Constants.LOG_TAG,"ok,"+result);
+            JsonObject json = new JsonParser().parse(result.toString()).getAsJsonObject();
+            JsonArray jarr = json.getAsJsonArray("data");
+            addWcMarkers(jarr);
+            dismissProgressDialog();
+        }
+
+        @Override
+        public void onReqFailed(String errorMsg) {
+            Log.i(Constants.LOG_TAG,"no,"+errorMsg);
+            dismissProgressDialog();
+        }
+    };
+    //endregion
+
+    //region ProgressDialog
+
+    private ProgressDialog dialogProgress;
+
+    private void initProgressDialog() {
+        if(null == dialogProgress) {
+            dialogProgress = new ProgressDialog(this);
+            dialogProgress.setCanceledOnTouchOutside(false);
+        }
+    }
+    public void showProgressDialog() {
+        if(dialogProgress!=null && !dialogProgress.isShowing()) {
+            dialogProgress.setMessage("正在加载...");
+            dialogProgress.show();
+        }
+    }
+
+    public void dismissProgressDialog() {
+        if(dialogProgress!=null && dialogProgress.isShowing()){
+            dialogProgress.dismiss();
+        }
+    }
     //endregion
 }

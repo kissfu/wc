@@ -61,7 +61,6 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
     private PositionInfo positionInfo;
     private GeocodeSearch geocoderSearch;
     private WCInfo wcInfo = new WCInfo();
-    private ProgressDialog dialogProgress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,10 +85,14 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
         btnAdd.setOnClickListener(this);
 
         getAddresses();
-        init();
+        initProgressDialog();
     }
+
     //region ProgressDialog
-    private void init() {
+
+    private ProgressDialog dialogProgress;
+
+    private void initProgressDialog() {
         if(null == dialogProgress) {
             dialogProgress = new ProgressDialog(this);
             dialogProgress.setCanceledOnTouchOutside(false);
@@ -199,7 +202,9 @@ public class PositionActivity extends AppCompatActivity  implements View.OnClick
             @Override
             public void run() {
                 try {
-                    RequestManager.getInstance(PositionActivity.this).requestAsyn("index.php",TYPE_POST_FORM,positionInfo.toMap(),reqCallBack);
+                    HashMap<String, String> hashMap = positionInfo.toMap();
+                    hashMap.put(Constants.REQ_ACTION_KEY,Constants.REQ_ACTION_ADD);
+                    RequestManager.getInstance(PositionActivity.this).requestAsyn(Constants.REQ_API_PHP,TYPE_POST_FORM,hashMap,reqCallBack);
                 } catch (Exception e) {
                     Message msg = msgHandler.obtainMessage();
                     msg.what = 0;

@@ -21,7 +21,7 @@ public class WCInfo implements Parcelable {
     /**
      * 联系方式
      */
-    private String contact;
+    private String contact = "";
     /**
      * 厕所类型，0 公共，1 收费，2 分享
      */

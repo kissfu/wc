@@ -22,7 +22,7 @@
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@mipmap/ic_location"/>
+            android:background="@mipmap/location_add"/>
 
         <ImageButton
             android:id="@+id/ibtn_position"
@@ -32,8 +32,32 @@
             android:layout_alignParentRight="true"
             android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
-            android:background="@mipmap/ic_location"/>
-
+            android:background="@mipmap/location_current"/>
+        <RelativeLayout
+            android:id="@+id/rl_maker_detail"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_alignParentBottom="true"
+            android:background="@mipmap/background_maker_detail"
+            android:visibility="gone">
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="12dp"
+                android:layout_marginTop="12dp"
+                android:textColor="#5566b8"
+                android:textSize="15sp"/>
+            <TextView
+                android:id="@+id/tv_address"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_below="@id/tv_title"
+                android:layout_marginLeft="12dp"
+                android:textColor="#333333"
+                android:textSize="15sp"/>
+        </RelativeLayout>
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

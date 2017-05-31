@@ -14,15 +14,15 @@ import java.util.HashMap;
 public class PositionInfo  implements Parcelable {
 
     //region Fields
-    private String cityCode;
-    private String address;
-    private String addressJoin;
-    private  String aoiName;
+    private String cityCode = "";
+    private String address = "";
+    private String addressJoin = "";
+    private  String aoiName = "";
     private LatLonPoint latLonPoint;
     /**
      * 摘要；附注;注意
      */
-    private String remark;
+    private String remark = "";
     private WCInfo wcInfo;
     //endregion
 
@@ -150,9 +150,11 @@ public class PositionInfo  implements Parcelable {
         paramsMap.put("city_code",getCityCode());
         paramsMap.put("longitude",getLatLonPoint().getLongitude()+"");
         paramsMap.put("latitude",getLatLonPoint().getLatitude()+"");
-        paramsMap.put("type_fee",getWcInfo().getTypeFee()+"");
-        paramsMap.put("sex",getWcInfo().getSex()+"");
-        paramsMap.put("contact",getWcInfo().getContact());
+        if(getWcInfo() != null){
+            paramsMap.put("type_fee",getWcInfo().getTypeFee()+"");
+            paramsMap.put("sex",getWcInfo().getSex()+"");
+            paramsMap.put("contact",getWcInfo().getContact());
+        }
         paramsMap.put("remark",getRemark());
         return paramsMap;
     }

@@ -16,4 +16,12 @@ public class ThreadUtil {
         }
         return cachedThreadPool;
     }
+
+    private static ExecutorService  singleThreadPool;
+    public static ExecutorService getSingleThreadPool(){
+        if(singleThreadPool == null){
+            singleThreadPool = Executors.newSingleThreadExecutor();
+        }
+        return singleThreadPool;
+    }
 }

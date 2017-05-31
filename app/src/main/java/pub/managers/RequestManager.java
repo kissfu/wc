@@ -28,7 +28,7 @@ public class RequestManager {
     private static final MediaType MEDIA_TYPE_FORM = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");//mdiatype 这个需要和服务端保持一致
     private static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");//mdiatype 这个需要和服务端保持一致
     private static final String TAG = RequestManager.class.getSimpleName();
-    private static final String BASE_URL = "http://172.19.12.2/demo1";//请求接口根地址
+    private static final String BASE_URL = "http://www.kissfu.com";//请求接口根地址
     private static volatile RequestManager mInstance;//单利引用
     public static final int TYPE_GET = 0;//get请求
     public static final int TYPE_POST_JSON = 1;//post请求参数为json
@@ -375,6 +375,7 @@ public class RequestManager {
             for (String key : paramsMap.keySet()) {
                 builder.add(key, paramsMap.get(key));
             }
+            //MEDIA_TYPE_FORM 默认 x-www-form-urlencoded
             RequestBody formBody = builder.build();
             String requestUrl = String.format("%s/%s", BASE_URL, actionUrl);
             final Request request = addHeaders().url(requestUrl).post(formBody).build();
