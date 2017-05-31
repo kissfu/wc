@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -456,8 +457,10 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
             Log.i(Constants.LOG_TAG,"ok,"+result);
             JsonObject json = new JsonParser().parse(result.toString()).getAsJsonObject();
             JsonArray jarr = json.getAsJsonArray("data");
-            addWcMarkers(jarr);
-            dismissProgressDialog();
+            Message msg = msgHandler.obtainMessage();
+            msg.what = 1;
+            msg.obj = jarr;
+            msgHandler.sendMessage(msg);
         }
 
         @Override
@@ -490,5 +493,19 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
             dialogProgress.dismiss();
         }
     }
+    //endregion
+
+    //region Handler Message
+    private Handler msgHandler = new Handler(){
+        public void handleMessage(Message msg) {
+            if(msg.what == 1){
+                JsonArray jarr = (JsonArray)msg.obj;
+                addWcMarkers(jarr);
+            }else{
+                ToastUtil.showerror(MainActivity.this, msg.arg1);
+            }
+            dismissProgressDialog();
+        }
+    };
     //endregion
 }
