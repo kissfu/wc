@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        //this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         rlMakerDetail = (RelativeLayout) findViewById(R.id.rl_maker_detail);
         tvTitle = (TextView) findViewById(R.id.tv_title);
         tvAddress = (TextView) findViewById(R.id.tv_address);
@@ -438,9 +438,14 @@ public class MainActivity extends AppCompatActivity implements LocationSource,AM
                     try {
                         // 第一个参数表示一个Latlng，第二参数表示范围多少米，第三个参数表示是火系坐标系还是GPS原生坐标系
                         RegeocodeQuery query = new RegeocodeQuery(new LatLonPoint(row.getLatitude(), row.getLongitude()), Constants.GEO_SEARCH_RANGE, GeocodeSearch.AMAP);
-                        RegeocodeAddress result = geocoderSearch.getFromLocation(query);// 设置同步逆地理编码请求
+                        final RegeocodeAddress result = geocoderSearch.getFromLocation(query);// 设置同步逆地理编码请求
                         if (result != null && result.getFormatAddress() != null) {
-                            setMarkerDetail(result, row);
+                           runOnUiThread(new Runnable() {
+                               @Override
+                               public void run() {
+                                   setMarkerDetail(result, row);
+                               }
+                           });
                         }
                     } catch (Exception e) {
                         dismissProgressDialog();
